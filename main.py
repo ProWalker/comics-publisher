@@ -57,9 +57,10 @@ def upload_comic_to_vk(group_id, access_token, comic, api_version):
         }
         response = requests.post(upload_url, files=files)
         response.raise_for_status()
-    vk_photo = response.json()['photo']
-    vk_server = response.json()['server']
-    vk_hash = response.json()['hash']
+    vk_payload = response.json()
+    vk_photo = vk_payload['photo']
+    vk_server = vk_payload['server']
+    vk_hash = vk_payload['hash']
     return vk_photo, vk_server, vk_hash
 
 
