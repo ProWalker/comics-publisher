@@ -26,14 +26,11 @@ def download_comic(url, images_folder_path, image_name):
         file.write(image_response.content)
 
 
-def get_random_comic_url():
+def get_last_comic_num():
     last_comic_url = 'https://xkcd.com/info.0.json'
     response = requests.get(last_comic_url)
     response.raise_for_status()
-    last_comic_num = response.json()['num']
-    comic_number = random.randint(1, last_comic_num)
-    comic_url = f'https://xkcd.com/{comic_number}/info.0.json'
-    return comic_url
+    return response.json()['num']
 
 
 def upload_comic_to_vk(group_id, access_token, comic, api_version):
@@ -119,7 +116,9 @@ if __name__ == '__main__':
     vk_access_token = os.getenv('VK_ACCESS_TOKEN')
     vk_api_version = float(os.getenv('VK_API_VERSION'))
     comic_name = 'comic'
-    comic_url = get_random_comic_url()
+    last_comic_num = get_last_comic_num()
+    comic_number = random.randint(1, last_comic_num)
+    comic_url = f'https://xkcd.com/{comic_number}/info.0.json'
     download_comic(comic_url, '.', comic_name)
     comic_response = requests.get(comic_url)
     comic_response.raise_for_status()
