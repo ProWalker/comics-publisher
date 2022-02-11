@@ -14,7 +14,8 @@ def get_image_extension_from_url(url):
     return file_extension
 
 
-def download_comic(url, images_folder_path, image_name):
+def download_comic(comic_number, images_folder_path, image_name):
+    url = f'https://xkcd.com/{comic_number}/info.0.json'
     response = requests.get(url)
     response.raise_for_status()
     image_url = response.json()['img']
@@ -118,8 +119,7 @@ if __name__ == '__main__':
     comic_name = 'comic'
     last_comic_num = get_last_comic_num()
     comic_number = random.randint(1, last_comic_num)
-    comic_url = f'https://xkcd.com/{comic_number}/info.0.json'
-    download_comic(comic_url, '.', comic_name)
+    download_comic(comic_number, '.', comic_name)
     comic_response = requests.get(comic_url)
     comic_response.raise_for_status()
     comic_comment = comic_response.json()['alt']
