@@ -14,6 +14,12 @@ def get_image_extension_from_url(url):
     return file_extension
 
 
+def check_vk_status(response):
+    response_content = response.json()
+    if 'error' in response_content:
+        raise requests.HTTPError(response_content['error']['error_msg'])
+
+
 def download_comic(comic_number, images_folder_path, image_name):
     url = f'https://xkcd.com/{comic_number}/info.0.json'
     response = requests.get(url)
@@ -49,6 +55,7 @@ def upload_comic_to_vk(group_id, access_token, comic, api_version):
         'v': api_version,
     }
     response = requests.get(api_url, params=params)
+    check_vk_status(response)
     response.raise_for_status()
     upload_url = response.json()['response']['upload_url']
     with open(comic, 'rb') as file:
