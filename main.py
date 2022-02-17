@@ -15,9 +15,8 @@ def get_image_extension_from_url(url):
 
 
 def check_vk_status(response):
-    response_content = response.json()
-    if 'error' in response_content:
-        raise requests.HTTPError(response_content['error']['error_msg'])
+    if 'error' in response:
+        raise requests.HTTPError(response['error']['error_msg'])
 
 
 def download_comic(comic_number, images_folder_path, image_name):
@@ -55,16 +54,18 @@ def upload_comic_to_vk(group_id, access_token, comic, api_version):
         'v': api_version,
     }
     response = requests.get(api_url, params=params)
-    check_vk_status(response)
     response.raise_for_status()
-    upload_url = response.json()['response']['upload_url']
+    vk_payload = response.json()
+    check_vk_status(vk_payload)
+    upload_url = vk_payload['response']['upload_url']
     with open(comic, 'rb') as file:
         files = {
             'photo': file,
         }
         response = requests.post(upload_url, files=files)
         response.raise_for_status()
-    vk_payload = response.json()
+        vk_payload = response.json()
+        check_vk_status(vk_payload)
     vk_photo = vk_payload['photo']
     vk_server = vk_payload['server']
     vk_hash = vk_payload['hash']
@@ -84,6 +85,7 @@ def save_vk_wall_photo(photo, server, vk_hash, group_id, access_token, api_versi
     response = requests.post(api_url, params=params)
     response.raise_for_status()
     vk_payload = response.json()
+    check_vk_status(vk_payload)
     owner_id = vk_payload['response'][0]['owner_id']
     media_id = vk_payload['response'][0]['id']
     return owner_id, media_id
@@ -100,6 +102,7 @@ def post_vk_photo(group_id, owner_id, media_id, access_token, comment, api_versi
     }
     response = requests.post(api_url, params=params)
     response.raise_for_status()
+    check_vk_status(response.json())
 
 
 def post_comic_to_vk_group(group_id, access_token, comic_file_name, comment, api_version):
@@ -135,14 +138,17 @@ if __name__ == '__main__':
     comic_name = 'comic'
     last_comic_num = get_last_comic_num()
     comic_number = random.randint(1, last_comic_num)
-    download_comic(comic_number, '.', comic_name)
-    comic_comment = get_comic_comment(comic_number)
-    comic_file = glob.glob(f'{comic_name}.*')[0]
-    post_comic_to_vk_group(
-        vk_group_id,
-        vk_access_token,
-        comic_file,
-        comic_comment,
-        vk_api_version
-    )
-    os.remove(comic_file)
+    try:
+        download_comic(comic_number, '.', comic_name)
+        comic_comment = get_comic_comment(comic_number)
+        comic_file = glob.glob(f'{comic_name}.*')[0]
+        post_comic_to_vk_group(
+            vk_group_id,
+            vk_access_token,
+            comic_file,
+            comic_comment,
+            vk_api_version
+        )
+    finally:
+        comic_file = glob.glob(f'{comic_name}.*')[0]
+        os.remove(comic_file)
